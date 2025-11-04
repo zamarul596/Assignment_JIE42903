@@ -126,10 +126,10 @@ def display_schedule(schedule, ratings, title, co_r, mut_r):
 #######################################
 # Streamlit Interface
 #######################################
-st.title("📺 Optimal TV Program Scheduler (Genetic Algorithm)")
+st.title("Optimal TV Program Scheduler (Genetic Algorithm)")
 st.write("This app finds the best TV program schedule using a Genetic Algorithm.")
 
-st.markdown("### ⚙️ Step 1: Set Parameters for Each Trial")
+st.markdown("Step 1: Set Parameters for Each Trial")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -146,7 +146,7 @@ with col2:
 
 # Sliders for 3 trials
 st.markdown("---")
-st.markdown("### 🧪 Trial Parameters")
+st.markdown("1) Trial Parameters")
 
 trial_params = []
 for i in range(1, 4):
@@ -156,7 +156,7 @@ for i in range(1, 4):
     trial_params.append((co_r, mut_r))
 
 st.markdown("---")
-st.markdown("### 📂 Step 2: Upload CSV File")
+st.markdown("Step 2: Upload CSV File")
 
 uploaded_file = st.file_uploader("Upload your program_ratings.csv file", type=["csv"])
 
@@ -173,23 +173,23 @@ if uploaded_file:
 
     all_programs = list(ratings.keys())
 
-    st.markdown("### 🧠 Step 3: Run the Genetic Algorithm")
+    st.markdown("Step 3: Run the Genetic Algorithm")
     if st.button("Run All Trials"):
         # Run default + 3 trials
-        st.header("📊 Final Optimal Schedules")
+        st.header("Final Optimal Schedules")
 
         # Default Run
         best_default = genetic_algorithm(ratings, all_programs,
                                          crossover_rate=default_CO_R,
                                          mutation_rate=default_MUT_R)
-        display_schedule(best_default, ratings, "🧩 Default Run Results", default_CO_R, default_MUT_R)
+        display_schedule(best_default, ratings, "Default Run Results", default_CO_R, default_MUT_R)
 
         # User Trials
         for i, (co_r, mut_r) in enumerate(trial_params, start=1):
             best_trial = genetic_algorithm(ratings, all_programs,
                                            crossover_rate=co_r,
                                            mutation_rate=mut_r)
-            display_schedule(best_trial, ratings, f"🧪 Trial {i} Results", co_r, mut_r)
+            display_schedule(best_trial, ratings, f"Trial {i} Results", co_r, mut_r)
 
 else:
     st.info("Please set the parameters above and then upload your CSV file to continue.")
