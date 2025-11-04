@@ -173,7 +173,7 @@ if uploaded_file:
 
     all_programs = list(ratings.keys())
 
-    st.markdown("Step 3: Run the Genetic Algorithm")
+    st.markdown("### Step 3: Run the Genetic Algorithm")
     if st.button("Run All Trials"):
         # Run default + 3 trials
         st.header("Final Optimal Schedules")
