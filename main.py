@@ -129,7 +129,7 @@ def display_schedule(schedule, ratings, title, co_r, mut_r):
 st.title("Optimal TV Program Scheduler (Genetic Algorithm)")
 st.write("This app finds the best TV program schedule using a Genetic Algorithm.")
 
-st.markdown("Step 1: Set Parameters for Each Trial")
+st.markdown("###Step 1: Set Parameters for Each Trial")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -156,7 +156,7 @@ for i in range(1, 4):
     trial_params.append((co_r, mut_r))
 
 st.markdown("---")
-st.markdown("Step 2: Upload CSV File")
+st.markdown("###Step 2: Upload CSV File")
 
 uploaded_file = st.file_uploader("Upload your program_ratings.csv file", type=["csv"])
 
