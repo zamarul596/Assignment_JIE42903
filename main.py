@@ -26,7 +26,6 @@ def read_csv_to_dict(file_path):
                 continue
             program = row[0].strip()
             try:
-                # read all columns as floats
                 ratings = [float(x) for x in row[1:] if x != ""]
             except ValueError as e:
                 st.error(f"Invalid numeric value in CSV for program '{program}': {e}")
@@ -102,15 +101,12 @@ def genetic_algorithm(ratings, all_programs, generations=100, population_size=50
 # Display Schedule Function
 #######################################
 def display_schedule(schedule, ratings, title, co_r, mut_r):
-    # Force show time slots from 6:00 to 23:00
-    all_time_slots = list(range(6, 24))
+    num_slots = len(next(iter(ratings.values())))
+    all_time_slots = list(range(6, 6 + num_slots))
 
     total_rating = 0
     results = []
     for time_slot, program in enumerate(schedule):
-        # Ensure we don't exceed available ratings
-        if time_slot >= len(ratings[program]):
-            break
         hour = all_time_slots[time_slot]
         rating = ratings[program][time_slot]
         total_rating += rating
@@ -123,15 +119,15 @@ def display_schedule(schedule, ratings, title, co_r, mut_r):
     df = pd.DataFrame(results)
     st.subheader(title)
     st.write(f"**Crossover Rate:** {co_r} | **Mutation Rate:** {mut_r}")
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df)
     st.success(f"Total Ratings: {total_rating:.2f}")
 
 
 #######################################
 # Streamlit Interface
 #######################################
-st.title("📺 Optimal TV Program Scheduler (Genetic Algorithm)")
-st.write("This app finds the best TV program schedule using a Genetic Algorithm for all time slots (6:00–23:00).")
+st.title("Optimal TV Program Scheduler (Genetic Algorithm)")
+st.write("This app finds the best TV program schedule using a Genetic Algorithm.")
 
 st.markdown("### Step 1: Set Parameters for Each Trial")
 
@@ -150,7 +146,7 @@ with col2:
 
 # Sliders for 3 trials
 st.markdown("---")
-st.markdown("1️⃣ **Trial Parameters**")
+st.markdown("1) Trial Parameters")
 
 trial_params = []
 for i in range(1, 4):
@@ -178,8 +174,9 @@ if uploaded_file:
     all_programs = list(ratings.keys())
 
     st.markdown("### Step 3: Run the Genetic Algorithm")
-    if st.button("🚀 Run All Trials"):
-        st.header("🧭 Final Optimal Schedules")
+    if st.button("Run All Trials"):
+        # Run default + 3 trials
+        st.header("Final Optimal Schedules")
 
         # Default Run
         best_default = genetic_algorithm(ratings, all_programs,
