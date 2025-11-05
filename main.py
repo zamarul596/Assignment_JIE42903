@@ -87,38 +87,49 @@ if uploaded_file is not None:
         best_final = max(population, key=lambda s: fitness_function(s))
         return best_final
 
-    # ---------------- TRIALS (Run One by One) ----------------
-    st.sidebar.header("⚙️ Run Each Trial Individually")
+    # ---------------- TRIALS (RUN ONE BY ONE) ----------------
+    st.sidebar.header("⚙️ Choose Trial to Run")
 
-    for i in range(1, 4):
-        st.sidebar.subheader(f"Trial {i}")
-        co_r = st.sidebar.slider(f"Trial {i} - Crossover Rate", 0.0, 0.95, 0.8, 0.01, key=f"co_r_{i}")
-        mut_r = st.sidebar.slider(f"Trial {i} - Mutation Rate", 0.01, 0.05, 0.02, 0.01, key=f"mut_r_{i}")
-        run_trial = st.sidebar.button(f"🚀 Run Trial {i}", key=f"run_{i}")
+    trial = st.sidebar.radio("Select a trial", ["Trial 1", "Trial 2", "Trial 3"])
 
-        if run_trial:
-            st.subheader(f"🎯 Trial {i} Results — Crossover: {co_r} | Mutation: {mut_r}")
-            initial_schedule = random_schedule()
+    if trial == "Trial 1":
+        co_r = st.sidebar.slider("Trial 1 - Crossover Rate", 0.0, 0.95, 0.8, 0.01)
+        mut_r = st.sidebar.slider("Trial 1 - Mutation Rate", 0.01, 0.05, 0.02, 0.01)
+        run_trial = st.sidebar.button("🚀 Run Trial 1")
 
-            progress = st.progress(0)
-            best_schedule = genetic_algorithm(
-                initial_schedule,
-                generations=GEN,
-                population_size=POP,
-                crossover_rate=co_r,
-                mutation_rate=mut_r,
-                elitism_size=EL_S
-            )
-            total_rating = fitness_function(best_schedule)
+    elif trial == "Trial 2":
+        co_r = st.sidebar.slider("Trial 2 - Crossover Rate", 0.0, 0.95, 0.8, 0.01)
+        mut_r = st.sidebar.slider("Trial 2 - Mutation Rate", 0.01, 0.05, 0.02, 0.01)
+        run_trial = st.sidebar.button("🚀 Run Trial 2")
 
-            df = pd.DataFrame({
-                "Time Slot": [f"{t:02d}:00" for t in all_time_slots],
-                "Program": best_schedule[:len(all_time_slots)]
-            })
-            st.dataframe(df, use_container_width=True)
-            st.success(f"✅ Total Ratings: {total_rating:.2f} | Crossover: {co_r} | Mutation: {mut_r}")
-            progress.progress(100)
-            gc.collect()
+    else:
+        co_r = st.sidebar.slider("Trial 3 - Crossover Rate", 0.0, 0.95, 0.8, 0.01)
+        mut_r = st.sidebar.slider("Trial 3 - Mutation Rate", 0.01, 0.05, 0.02, 0.01)
+        run_trial = st.sidebar.button("🚀 Run Trial 3")
+
+    if run_trial:
+        st.subheader(f"🎯 {trial} Results — Crossover: {co_r} | Mutation: {mut_r}")
+        initial_schedule = random_schedule()
+        progress = st.progress(0)
+
+        best_schedule = genetic_algorithm(
+            initial_schedule,
+            generations=GEN,
+            population_size=POP,
+            crossover_rate=co_r,
+            mutation_rate=mut_r,
+            elitism_size=EL_S
+        )
+        total_rating = fitness_function(best_schedule)
+
+        df = pd.DataFrame({
+            "Time Slot": [f"{t:02d}:00" for t in all_time_slots],
+            "Program": best_schedule[:len(all_time_slots)]
+        })
+        st.dataframe(df, use_container_width=True)
+        st.success(f"✅ Total Ratings: {total_rating:.2f} | Crossover: {co_r} | Mutation: {mut_r}")
+        progress.progress(100)
+        gc.collect()
 
 else:
     st.info("👆 Please upload a CSV file to start.")
