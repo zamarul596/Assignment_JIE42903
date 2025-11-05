@@ -66,9 +66,13 @@ def mutate(schedule, all_programs):
 def genetic_algorithm(ratings, all_programs, generations=100, population_size=50,
                       crossover_rate=0.8, mutation_rate=0.2, elitism_size=2):
 
-    initial_schedule = all_programs.copy()
-    random.shuffle(initial_schedule)
-    population = [initial_schedule.copy()]
+# Ensure schedule covers all 18 time slots
+    num_time_slots = 18
+    population = []
+    for _ in range(population_size):
+        schedule = [random.choice(all_programs) for _ in range(num_time_slots)]
+        population.append(schedule)
+
     for _ in range(population_size - 1):
         random_schedule = all_programs.copy()
         random.shuffle(random_schedule)
