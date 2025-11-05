@@ -1,27 +1,39 @@
+
 import streamlit as st
 import csv
 import random
 import pandas as pd
-from pathlib import Path
 
 st.set_page_config(page_title="📺 Program Rating Optimizer", layout="wide")
 st.title("📺 Program Rating Optimizer")
 
-# ---------------- FILE PATH ----------------
-file_path = Path("modify_program_ratings.csv")
+# ---------------- FILE UPLOAD ----------------
+uploaded_file = st.file_uploader("📂 Upload your program_ratings.csv file", type=["csv"])
 
 @st.cache_data
-def read_csv_to_dict(file_path):
-    """Reads CSV and converts it into a dictionary of program: ratings list."""
+def read_csv_to_dict(file):
+    """Reads the uploaded CSV and converts it into a dictionary of program: ratings list."""
     program_ratings = {}
-    with open(file_path, "r", encoding="utf-8") as f:
-        reader = csv.reader(f)
-        header = next(reader)  # Skip header
-        for row in reader:
-            program = row[0]
-            ratings = [float(x) for x in row[1:]]
-            program_ratings[program] = ratings
+    reader = csv.reader(file.read().decode("utf-8").splitlines())
+    header = next(reader)  # Skip header
+    for row in reader:
+        program = row[0]
+        ratings = [float(x) for x in row[1:]]
+        program_ratings[program] = ratings
     return program_ratings
+
+
+if uploaded_file is not None:
+    # Read ratings data
+    ratings = read_csv_to_dict(uploaded_file)
+
+    # Parameters
+    GEN = 100
+    POP = 50
+    EL_S = 2
+
+    all_programs = list(ratings.keys())  # all programs
+    all_time_slots = list(range(6, 24))  # 6:00 to 23:00
 
 
 if file_path.exists():
