@@ -4,11 +4,11 @@ import random
 import pandas as pd
 from pathlib import Path
 
-st.set_page_config(page_title="📺 Program Rating Optimizer", layout="wide")
-st.title("📺 Program Rating Optimizer")
+st.set_page_config(page_title="Program Rating Optimizer", layout="wide")
+st.title("Program Rating Optimizer")
 
 # ---------------- FILE PATH ----------------
-file_path = Path("program_ratings.csv")
+file_path = Path("modify_program_ratings.csv")
 
 @st.cache_data
 def read_csv_to_dict(file_path):
@@ -109,7 +109,7 @@ if file_path.exists():
         return population[0]
 
     # ---------------- TRIAL SELECTION ----------------
-    st.sidebar.header("⚙️ Choose Trial to Run")
+    st.sidebar.header("Choose Trial to Run")
     trial = st.sidebar.radio("Select a trial", ["Trial 1", "Trial 2", "Trial 3"])
 
     # Initialize session state for results
@@ -119,15 +119,15 @@ if file_path.exists():
     if trial == "Trial 1":
         co_r = st.sidebar.slider("Trial 1 - Crossover Rate", 0.0, 0.95, 0.8, 0.01)
         mut_r = st.sidebar.slider("Trial 1 - Mutation Rate", 0.01, 0.05, 0.02, 0.01)
-        run_trial = st.sidebar.button("🚀 Run Trial 1")
+        run_trial = st.sidebar.button("Run Trial 1")
     elif trial == "Trial 2":
         co_r = st.sidebar.slider("Trial 2 - Crossover Rate", 0.0, 0.95, 0.8, 0.01)
         mut_r = st.sidebar.slider("Trial 2 - Mutation Rate", 0.01, 0.05, 0.02, 0.01)
-        run_trial = st.sidebar.button("🚀 Run Trial 2")
+        run_trial = st.sidebar.button("Run Trial 2")
     else:
         co_r = st.sidebar.slider("Trial 3 - Crossover Rate", 0.0, 0.95, 0.8, 0.01)
         mut_r = st.sidebar.slider("Trial 3 - Mutation Rate", 0.01, 0.05, 0.02, 0.01)
-        run_trial = st.sidebar.button("🚀 Run Trial 3")
+        run_trial = st.sidebar.button("Run Trial 3")
 
     # ---------------- RUN & SAVE TRIAL ----------------
     if run_trial:
@@ -153,11 +153,11 @@ if file_path.exists():
     # ---------------- DISPLAY RESULTS ----------------
     result = st.session_state.trial_results.get(trial)
     if result:
-        st.subheader(f"🎯 {trial} Results — Crossover: {result['co']:.2f} | Mutation: {result['mut']:.2f}")
+        st.subheader(f"{trial} Results — Crossover: {result['co']:.2f} | Mutation: {result['mut']:.2f}")
         st.dataframe(result["df"], use_container_width=True)
-        st.success(f"✅ Total Ratings: {result['rating']:.2f}")
+        st.success(f"Total Ratings: {result['rating']:.2f}")
     else:
-        st.info(f"ℹ️ No result yet for {trial}. Run this trial to generate results.")
+        st.info(f"No result yet for {trial}. Run this trial to generate results.")
 
 else:
-    st.warning("⚠️ File 'modify_program_ratings.csv' not found in directory.")
+    st.warning("File 'modify_program_ratings.csv' not found in directory.")
