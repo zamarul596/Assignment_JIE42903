@@ -37,7 +37,9 @@ if uploaded_file is not None:
     def fitness_function(schedule):
         total_rating = 0
         for time_slot, program in enumerate(schedule):
-            total_rating += ratings[program][time_slot]
+            # prevent index error if program has fewer ratings than time slots
+            if time_slot < len(ratings[program]):
+                total_rating += ratings[program][time_slot]
         return total_rating
 
     def random_schedule():
@@ -122,10 +124,17 @@ if uploaded_file is not None:
         )
         total_rating = fitness_function(best_schedule)
 
+        # Debug info
+        st.write(f"🧩 Programs: {len(all_programs)} | Time Slots: {len(all_time_slots)}")
+
+        # --- FIX: ensure equal length ---
+        num_slots = min(len(all_time_slots), len(best_schedule))
+
         df = pd.DataFrame({
-            "Time Slot": [f"{t:02d}:00" for t in all_time_slots],
-            "Program": best_schedule[:len(all_time_slots)]
+            "Time Slot": [f"{t:02d}:00" for t in all_time_slots[:num_slots]],
+            "Program": best_schedule[:num_slots]
         })
+
         st.dataframe(df, use_container_width=True)
         st.success(f"✅ Total Ratings: {total_rating:.2f} | Crossover: {co_r} | Mutation: {mut_r}")
         progress.progress(100)
