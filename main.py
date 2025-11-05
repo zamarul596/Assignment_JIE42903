@@ -71,7 +71,12 @@ def genetic_algorithm(ratings, all_programs, generations=100, population_size=50
     #######################################
     # 🟡 CHANGE 1: Create initial_schedule like offline version
     #######################################
-    initial_schedule = all_programs[:num_time_slots]
+    # 🟢 FIX: Always make sure initial schedule has 18 time slots
+    initial_schedule = []
+    while len(initial_schedule) < num_time_slots:
+        initial_schedule.extend(all_programs)
+    initial_schedule = initial_schedule[:num_time_slots]
+
 
     #######################################
     # 🟡 CHANGE 2: Initialize population by shuffling the same schedule
