@@ -1,6 +1,7 @@
 import streamlit as st
 import csv
 import random
+import pandas as pd
 
 st.title("📺 Program Rating Optimizer (Lecturer’s GA Version)")
 
@@ -26,12 +27,15 @@ if uploaded_file is not None:
     ratings = program_ratings_dict
     GEN = 100
     POP = 50
-    CO_R = 0.8
-    MUT_R = 0.2
     EL_S = 2
 
     all_programs = list(ratings.keys())
     all_time_slots = list(range(6, 24))
+
+    # ---------------- SLIDERS FOR CROSSOVER & MUTATION ----------------
+    st.sidebar.header("⚙️ GA Parameters")
+    CO_R = st.sidebar.slider("Crossover Rate", 0.0, 0.95, 0.8, 0.01)
+    MUT_R = st.sidebar.slider("Mutation Rate", 0.01, 0.05, 0.02, 0.01)
 
     # ---------------- FUNCTIONS ----------------
     def fitness_function(schedule):
@@ -104,17 +108,34 @@ if uploaded_file is not None:
 
         return population[0]
 
+    # ---------------- RUN 3 TRIALS ----------------
+    st.subheader("🎯 Running 3 Trials...")
+    trial_results = []
+
     initial_best_schedule = finding_best_schedule(all_possible_schedules)
     rem_t_slots = len(all_time_slots) - len(initial_best_schedule)
-    genetic_schedule = genetic_algorithm(initial_best_schedule, generations=GEN, population_size=POP, elitism_size=EL_S)
-    final_schedule = initial_best_schedule + genetic_schedule[:rem_t_slots]
 
-    # ---------------- OUTPUT ----------------
-    st.subheader("🧠 Final Optimal Schedule")
-    for time_slot, program in enumerate(final_schedule):
-        st.write(f"Time Slot {all_time_slots[time_slot]:02d}:00 - Program {program}")
+    for trial in range(1, 4):
+        genetic_schedule = genetic_algorithm(initial_best_schedule, generations=GEN, population_size=POP, elitism_size=EL_S)
+        final_schedule = initial_best_schedule + genetic_schedule[:rem_t_slots]
+        total_rating = fitness_function(final_schedule)
+        trial_results.append((trial, final_schedule, total_rating))
 
-    st.success(f"✅ Total Ratings: {fitness_function(final_schedule):.2f}")
+        st.write(f"**Trial {trial} Total Rating:** {total_rating:.2f}")
+
+    # ---------------- DISPLAY BEST RESULT IN TABLE ----------------
+    best_trial = max(trial_results, key=lambda x: x[2])
+    best_schedule = best_trial[1]
+    best_total = best_trial[2]
+
+    st.subheader("🏆 Best Schedule Result (Table Format)")
+    df = pd.DataFrame({
+        "Time Slot": [f"{t:02d}:00" for t in all_time_slots],
+        "Program": best_schedule[:len(all_time_slots)]
+    })
+
+    st.table(df)
+    st.success(f"✅ Best Total Ratings: {best_total:.2f}")
 
 else:
     st.info("👆 Please upload a CSV file to start.")
