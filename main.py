@@ -23,9 +23,7 @@ def read_csv_to_dict(file):
     return program_ratings
 
 
-if uploaded_file is not None:
-    # Read ratings data
-    ratings = read_csv_to_dict(uploaded_file)
+
 
     # Parameters
     GEN = 100
