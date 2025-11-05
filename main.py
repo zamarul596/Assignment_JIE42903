@@ -1,7 +1,20 @@
 import csv
 import random
+import tkinter as tk
+from tkinter import filedialog
 
 ####################################### LOAD DATASET #####################################################
+
+def browse_file():
+    """Open a file browser for the user to select a CSV file."""
+    root = tk.Tk()
+    root.withdraw()  # Hide main window
+    file_path = filedialog.askopenfilename(
+        title="Select Program Ratings CSV File",
+        filetypes=[("CSV Files", "*.csv")]
+    )
+    return file_path
+
 
 def read_csv_to_dict(file_path):
     """
@@ -19,15 +32,6 @@ def read_csv_to_dict(file_path):
     return program_ratings
 
 
-# Path to your CSV file (update path if needed)
-file_path = '/content/program_ratings.csv'
-ratings = read_csv_to_dict(file_path)
-
-# Confirm dataset
-print("Loaded programs and ratings:")
-for program, rate in ratings.items():
-    print(f"{program}: {len(rate)} time slots ({rate[:3]}...)")
-
 ###################################### PARAMETERS ########################################################
 
 GEN = 100           # Number of generations
@@ -36,16 +40,12 @@ CO_R = 0.8          # Crossover rate
 MUT_R = 0.2         # Mutation rate
 EL_S = 2            # Elitism size
 
-all_programs = list(ratings.keys())         # List of all programs
-all_time_slots = list(range(6, 24))         # Time slots 06:00–23:00
-
 ###################################### FUNCTIONS #########################################################
 
 def fitness_function(schedule):
     """Calculate total rating for a given schedule."""
     total_rating = 0
     for time_slot, program in enumerate(schedule):
-        # Handle case if schedule shorter than ratings length
         if time_slot < len(ratings[program]):
             total_rating += ratings[program][time_slot]
     return total_rating
@@ -100,7 +100,6 @@ def genetic_algorithm(initial_schedule, generations=GEN, population_size=POP,
     """Run Genetic Algorithm."""
     population = [initial_schedule]
 
-    # Create initial random population
     for _ in range(population_size - 1):
         random_schedule = initial_schedule.copy()
         random.shuffle(random_schedule)
@@ -109,7 +108,7 @@ def genetic_algorithm(initial_schedule, generations=GEN, population_size=POP,
     for generation in range(generations):
         new_population = []
 
-        # Elitism — keep top individuals
+        # Elitism
         population.sort(key=lambda schedule: fitness_function(schedule), reverse=True)
         new_population.extend(population[:elitism_size])
 
@@ -130,7 +129,6 @@ def genetic_algorithm(initial_schedule, generations=GEN, population_size=POP,
 
         population = new_population
 
-    # Return the best schedule found
     population.sort(key=lambda schedule: fitness_function(schedule), reverse=True)
     return population[0]
 
@@ -139,17 +137,14 @@ def genetic_algorithm(initial_schedule, generations=GEN, population_size=POP,
 def run_trial(trial_num):
     print(f"\n===== TRIAL {trial_num} =====")
 
-    # Brute force initial schedule
     all_possible_schedules = initialize_pop(all_programs, all_time_slots)
     initial_best_schedule = finding_best_schedule(all_possible_schedules)
 
-    # Run GA
     genetic_schedule = genetic_algorithm(initial_best_schedule, 
                                          generations=GEN, 
                                          population_size=POP, 
                                          elitism_size=EL_S)
 
-    # Combine results
     rem_t_slots = len(all_time_slots) - len(initial_best_schedule)
     final_schedule = initial_best_schedule + genetic_schedule[:rem_t_slots]
 
@@ -161,8 +156,22 @@ def run_trial(trial_num):
     print("Total Ratings:", total)
     return total
 
-###################################### MULTIPLE TRIALS ####################################################
+###################################### RUN PROGRAM ####################################################
 
+print("📂 Please select your CSV file...")
+file_path = browse_file()
+
+if not file_path:
+    print("❌ No file selected. Exiting program.")
+    exit()
+
+ratings = read_csv_to_dict(file_path)
+all_programs = list(ratings.keys())
+all_time_slots = list(range(6, 24))
+
+print(f"\n✅ Loaded {len(all_programs)} programs with {len(all_time_slots)} time slots (6:00–23:00)")
+
+# Run multiple trials
 TRIALS = 3
 best_total = 0
 best_run = None
