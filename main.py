@@ -8,7 +8,7 @@ st.set_page_config(page_title="📺 Program Rating Optimizer", layout="wide")
 st.title("📺 Program Rating Optimizer")
 
 # ---------------- FILE PATH ----------------
-file_path = Path("modify_program_ratings.csv")
+file_path = Path("program_ratings.csv")
 
 @st.cache_data
 def read_csv_to_dict(file_path):
