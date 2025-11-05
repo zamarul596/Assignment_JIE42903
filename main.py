@@ -67,14 +67,25 @@ def genetic_algorithm(ratings, all_programs, generations=100, population_size=50
                       crossover_rate=0.8, mutation_rate=0.2, elitism_size=2):
 
     num_time_slots = 18  # From 6:00 to 23:00
-    # Initialize population (programs can repeat)
-    population = []
-    for _ in range(population_size):
-        schedule = [random.choice(all_programs) for _ in range(num_time_slots)]
-        population.append(schedule)
 
+    #######################################
+    # 🟡 CHANGE 1: Create initial_schedule like offline version
+    #######################################
+    initial_schedule = all_programs[:num_time_slots]
+
+    #######################################
+    # 🟡 CHANGE 2: Initialize population by shuffling the same schedule
+    #######################################
+    population = [initial_schedule.copy()]
+    for _ in range(population_size - 1):
+        random_schedule = initial_schedule.copy()
+        random.shuffle(random_schedule)
+        population.append(random_schedule)
+
+    #######################################
+    # 🟡 The rest remains the same
+    #######################################
     for _ in range(generations):
-        # Evaluate fitness
         population.sort(key=lambda s: fitness_function(s, ratings), reverse=True)
         new_population = population[:elitism_size]  # Elitism
 
@@ -146,7 +157,6 @@ with col2:
     st.write("- Crossover Rate (CO_R): 0.0 – 0.95")
     st.write("- Mutation Rate (MUT_R): 0.01 – 0.05")
 
-# Sliders for 3 trials
 st.markdown("---")
 st.markdown("1) Trial Parameters")
 
