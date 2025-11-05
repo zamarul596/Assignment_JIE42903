@@ -101,8 +101,7 @@ def genetic_algorithm(ratings, all_programs, generations=100, population_size=50
 # Display Schedule Function
 #######################################
 def display_schedule(schedule, ratings, title, co_r, mut_r):
-    num_slots = len(next(iter(ratings.values())))
-    all_time_slots = list(range(6, 6 + num_slots))
+    all_time_slots = list(range(6, 24)) 
 
     total_rating = 0
     results = []
