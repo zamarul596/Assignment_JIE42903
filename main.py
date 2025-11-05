@@ -108,13 +108,13 @@ if file_path.exists():
 
         return population[0]
 
-    # ---------------- SESSION STATE INIT ----------------
-    if "result_data" not in st.session_state:
-        st.session_state.result_data = None
-
     # ---------------- TRIAL SELECTION ----------------
     st.sidebar.header("⚙️ Choose Trial to Run")
     trial = st.sidebar.radio("Select a trial", ["Trial 1", "Trial 2", "Trial 3"])
+
+    # Initialize session state for results
+    if "trial_results" not in st.session_state:
+        st.session_state.trial_results = {"Trial 1": None, "Trial 2": None, "Trial 3": None}
 
     if trial == "Trial 1":
         co_r = st.sidebar.slider("Trial 1 - Crossover Rate", 0.0, 0.95, 0.8, 0.01)
@@ -129,41 +129,35 @@ if file_path.exists():
         mut_r = st.sidebar.slider("Trial 3 - Mutation Rate", 0.01, 0.05, 0.02, 0.01)
         run_trial = st.sidebar.button("🚀 Run Trial 3")
 
-    # ---------------- RUN SELECTED TRIAL ----------------
+    # ---------------- RUN & SAVE TRIAL ----------------
     if run_trial:
         all_possible_schedules = initialize_pop(all_programs, all_time_slots)
         initial_best_schedule = finding_best_schedule(all_possible_schedules)
-
         rem_t_slots = len(all_time_slots) - len(initial_best_schedule)
-        genetic_schedule = genetic_algorithm(initial_best_schedule, generations=GEN, population_size=POP,
-                                             crossover_rate=co_r, mutation_rate=mut_r, elitism_size=EL_S)
+
+        genetic_schedule = genetic_algorithm(
+            initial_best_schedule, generations=GEN, population_size=POP,
+            crossover_rate=co_r, mutation_rate=mut_r, elitism_size=EL_S
+        )
 
         final_schedule = initial_best_schedule + genetic_schedule[:rem_t_slots]
-
         df = pd.DataFrame({
             "Time Slot": [f"{t:02d}:00" for t in all_time_slots[:len(final_schedule)]],
             "Program": final_schedule
         })
-
         total_rating = fitness_function(final_schedule)
 
-        # ✅ Save to session state
-        st.session_state.result_data = {
-            "trial": trial,
-            "df": df,
-            "co_r": co_r,
-            "mut_r": mut_r,
-            "total_rating": total_rating
-        }
+        # Save to session state
+        st.session_state.trial_results[trial] = {"df": df, "rating": total_rating, "co": co_r, "mut": mut_r}
 
     # ---------------- DISPLAY RESULTS ----------------
-    if st.session_state.result_data is not None:
-        result = st.session_state.result_data
-        st.subheader(f"🎯 {result['trial']} Results — Crossover: {result['co_r']:.2f} | Mutation: {result['mut_r']:.2f}")
+    result = st.session_state.trial_results.get(trial)
+    if result:
+        st.subheader(f"🎯 {trial} Results — Crossover: {result['co']:.2f} | Mutation: {result['mut']:.2f}")
         st.dataframe(result["df"], use_container_width=True)
-        st.success(f"✅ Total Ratings: {result['total_rating']:.2f}")
+        st.success(f"✅ Total Ratings: {result['rating']:.2f}")
     else:
-        st.info("👆 Please run a trial to view results.")
+        st.info(f"ℹ️ No result yet for {trial}. Run this trial to generate results.")
 
 else:
     st.warning("⚠️ File 'modify_program_ratings.csv' not found in directory.")
