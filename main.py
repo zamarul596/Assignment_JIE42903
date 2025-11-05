@@ -2,26 +2,29 @@ import streamlit as st
 import csv
 import random
 import pandas as pd
+import gc
 
+st.set_page_config(page_title="📺 Program Rating Optimizer", layout="wide")
 st.title("📺 Program Rating Optimizer (Lecturer’s GA Version)")
 
 # ---------------- FILE UPLOAD ----------------
 uploaded_file = st.file_uploader("📂 Upload your program_ratings.csv file", type=["csv"])
 
+@st.cache_data
+def read_csv_to_dict(file):
+    program_ratings = {}
+    reader = csv.reader(file.read().decode("utf-8").splitlines())
+    header = next(reader)  # skip header
+
+    for row in reader:
+        program = row[0]
+        ratings = [float(x) for x in row[1:]]
+        program_ratings[program] = ratings
+
+    return program_ratings
+
+
 if uploaded_file is not None:
-    # Read CSV into dictionary
-    def read_csv_to_dict(file):
-        program_ratings = {}
-        reader = csv.reader(file.read().decode("utf-8").splitlines())
-        header = next(reader)  # skip header
-
-        for row in reader:
-            program = row[0]
-            ratings = [float(x) for x in row[1:]]
-            program_ratings[program] = ratings
-
-        return program_ratings
-
     program_ratings_dict = read_csv_to_dict(uploaded_file)
 
     ratings = program_ratings_dict
@@ -50,6 +53,9 @@ if uploaded_file is not None:
         return total_rating
 
     def initialize_pop(programs, time_slots):
+        # Safety limit: avoid recursion explosion
+        if len(programs) > 10:
+            return [random.sample(programs, len(programs))]
         if not programs:
             return [[]]
         all_schedules = []
@@ -112,7 +118,8 @@ if uploaded_file is not None:
 
             population = new_population
 
-        return population[0]
+        best_final = max(population, key=lambda s: fitness_function(s))
+        return best_final
 
     # ---------------- RUN BUTTON ----------------
     if st.button("🚀 Run 3 Trials"):
@@ -122,6 +129,7 @@ if uploaded_file is not None:
         initial_best_schedule = finding_best_schedule(all_possible_schedules)
         rem_t_slots = len(all_time_slots) - len(initial_best_schedule)
 
+        progress = st.progress(0)
         for i, (co_r, mut_r) in enumerate(trial_params, start=1):
             genetic_schedule = genetic_algorithm(
                 initial_best_schedule,
@@ -136,6 +144,7 @@ if uploaded_file is not None:
             trial_results.append((i, final_schedule, total_rating, co_r, mut_r))
 
             st.write(f"**Trial {i}** — Crossover: `{co_r}` | Mutation: `{mut_r}` | Total Rating: **{total_rating:.2f}**")
+            progress.progress(i / 3)
 
         # ---------------- DISPLAY BEST RESULT IN TABLE ----------------
         best_trial = max(trial_results, key=lambda x: x[2])
@@ -148,6 +157,9 @@ if uploaded_file is not None:
         })
         st.table(df)
         st.success(f"✅ Best Total Ratings: {best_total:.2f} | Crossover: {best_co} | Mutation: {best_mut}")
+
+        # Memory cleanup
+        gc.collect()
 
 else:
     st.info("👆 Please upload a CSV file to start.")
