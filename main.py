@@ -108,6 +108,10 @@ if file_path.exists():
 
         return population[0]
 
+    # ---------------- SESSION STATE INIT ----------------
+    if "result_data" not in st.session_state:
+        st.session_state.result_data = None
+
     # ---------------- TRIAL SELECTION ----------------
     st.sidebar.header("⚙️ Choose Trial to Run")
     trial = st.sidebar.radio("Select a trial", ["Trial 1", "Trial 2", "Trial 3"])
@@ -127,8 +131,6 @@ if file_path.exists():
 
     # ---------------- RUN SELECTED TRIAL ----------------
     if run_trial:
-        st.subheader(f"🎯 {trial} Results — Crossover: {co_r:.2f} | Mutation: {mut_r:.2f}")
-
         all_possible_schedules = initialize_pop(all_programs, all_time_slots)
         initial_best_schedule = finding_best_schedule(all_possible_schedules)
 
@@ -145,8 +147,23 @@ if file_path.exists():
 
         total_rating = fitness_function(final_schedule)
 
-        st.dataframe(df, use_container_width=True)
-        st.success(f"✅ Total Ratings: {total_rating:.2f}")
+        # ✅ Save to session state
+        st.session_state.result_data = {
+            "trial": trial,
+            "df": df,
+            "co_r": co_r,
+            "mut_r": mut_r,
+            "total_rating": total_rating
+        }
+
+    # ---------------- DISPLAY RESULTS ----------------
+    if st.session_state.result_data is not None:
+        result = st.session_state.result_data
+        st.subheader(f"🎯 {result['trial']} Results — Crossover: {result['co_r']:.2f} | Mutation: {result['mut_r']:.2f}")
+        st.dataframe(result["df"], use_container_width=True)
+        st.success(f"✅ Total Ratings: {result['total_rating']:.2f}")
+    else:
+        st.info("👆 Please run a trial to view results.")
 
 else:
     st.warning("⚠️ File 'modify_program_ratings.csv' not found in directory.")
