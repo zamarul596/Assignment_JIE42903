@@ -66,29 +66,28 @@ def mutate(schedule, all_programs):
 def genetic_algorithm(ratings, all_programs, generations=100, population_size=50,
                       crossover_rate=0.8, mutation_rate=0.2, elitism_size=2):
 
-# Ensure schedule covers all 18 time slots
-    num_time_slots = 18
+    num_time_slots = 18  # From 6:00 to 23:00
+    # Initialize population (programs can repeat)
     population = []
     for _ in range(population_size):
         schedule = [random.choice(all_programs) for _ in range(num_time_slots)]
         population.append(schedule)
 
-    for _ in range(population_size - 1):
-        random_schedule = all_programs.copy()
-        random.shuffle(random_schedule)
-        population.append(random_schedule)
-
     for _ in range(generations):
+        # Evaluate fitness
         population.sort(key=lambda s: fitness_function(s, ratings), reverse=True)
-        new_population = population[:elitism_size]
+        new_population = population[:elitism_size]  # Elitism
 
         while len(new_population) < population_size:
             parent1, parent2 = random.choices(population, k=2)
+
+            # Crossover
             if random.random() < crossover_rate:
                 child1, child2 = crossover(parent1, parent2)
             else:
                 child1, child2 = parent1.copy(), parent2.copy()
 
+            # Mutation
             if random.random() < mutation_rate:
                 child1 = mutate(child1, all_programs)
             if random.random() < mutation_rate:
@@ -105,7 +104,7 @@ def genetic_algorithm(ratings, all_programs, generations=100, population_size=50
 # Display Schedule Function
 #######################################
 def display_schedule(schedule, ratings, title, co_r, mut_r):
-    all_time_slots = list(range(6, 24)) 
+    all_time_slots = list(range(6, 24))  # 6:00 to 23:00
 
     total_rating = 0
     results = []
@@ -122,7 +121,7 @@ def display_schedule(schedule, ratings, title, co_r, mut_r):
     df = pd.DataFrame(results)
     st.subheader(title)
     st.write(f"**Crossover Rate:** {co_r} | **Mutation Rate:** {mut_r}")
-    st.dataframe(df)
+    st.dataframe(df, use_container_width=True)
     st.success(f"Total Ratings: {total_rating:.2f}")
 
 
@@ -178,7 +177,6 @@ if uploaded_file:
 
     st.markdown("### Step 3: Run the Genetic Algorithm")
     if st.button("Run All Trials"):
-        # Run default + 3 trials
         st.header("Final Optimal Schedules")
 
         # Default Run
