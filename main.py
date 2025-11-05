@@ -66,26 +66,16 @@ def mutate(schedule, all_programs):
 def genetic_algorithm(ratings, all_programs, generations=100, population_size=50,
                       crossover_rate=0.8, mutation_rate=0.2, elitism_size=2):
 
-    num_time_slots = 18  # From 6:00 to 23:00
+    num_time_slots = 18
+    initial_schedule = all_programs[:num_time_slots]  # base schedule
 
-    #######################################
-    # 🟡 CHANGE 1: Create initial_schedule like offline version
-    #######################################
-    # 🟢 FIX: Always make sure initial schedule has 18 time slots
-    initial_schedule = []
-    while len(initial_schedule) < num_time_slots:
-        initial_schedule.extend(all_programs)
-    initial_schedule = initial_schedule[:num_time_slots]
-
-
-    #######################################
-    # 🟡 CHANGE 2: Initialize population by shuffling the same schedule
-    #######################################
+    # 🧩 population = only shuffled versions of same schedule (no repetition)
     population = [initial_schedule.copy()]
     for _ in range(population_size - 1):
         random_schedule = initial_schedule.copy()
         random.shuffle(random_schedule)
         population.append(random_schedule)
+
 
     #######################################
     # 🟡 The rest remains the same
