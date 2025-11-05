@@ -5,7 +5,7 @@ import pandas as pd
 import gc
 
 st.set_page_config(page_title="📺 Program Rating Optimizer", layout="wide")
-st.title("📺 Program Rating Optimizer (Lecturer’s GA Version)")
+st.title("📺 Program Rating Optimizer (Lecturer’s GA Version - Brute Force + GA)")
 
 # ---------------- FILE UPLOAD ----------------
 uploaded_file = st.file_uploader("📂 Upload your program_ratings.csv file", type=["csv"])
@@ -32,7 +32,7 @@ if uploaded_file is not None:
     EL_S = 2
 
     all_programs = list(ratings.keys())
-    all_time_slots = list(range(6, 24))  # 6:00 to 23:00 = 18 time slots
+    all_time_slots = list(range(6, 24))  # 6:00 to 23:00
 
     # ---------------- FUNCTIONS ----------------
     def fitness_function(schedule):
@@ -43,19 +43,34 @@ if uploaded_file is not None:
                 total_rating += ratings[program][time_slot]
         return total_rating
 
-    def random_schedule():
-        """Create a random schedule with one program per time slot."""
-        return [random.choice(all_programs) for _ in all_time_slots]
+    def initialize_pop(programs):
+        """Generate all possible permutations (for small dataset brute force)."""
+        if not programs:
+            return [[]]
+        all_schedules = []
+        for i in range(len(programs)):
+            for schedule in initialize_pop(programs[:i] + programs[i + 1:]):
+                all_schedules.append([programs[i]] + schedule)
+        return all_schedules
+
+    def finding_best_schedule(all_schedules):
+        """Find the schedule with maximum total rating."""
+        best_schedule = []
+        max_ratings = 0
+        for schedule in all_schedules:
+            total_ratings = fitness_function(schedule)
+            if total_ratings > max_ratings:
+                max_ratings = total_ratings
+                best_schedule = schedule
+        return best_schedule
 
     def crossover(schedule1, schedule2):
-        """Single-point crossover."""
         crossover_point = random.randint(1, len(schedule1) - 2)
         child1 = schedule1[:crossover_point] + schedule2[crossover_point:]
         child2 = schedule2[:crossover_point] + schedule1[crossover_point:]
         return child1, child2
 
     def mutate(schedule):
-        """Randomly change one program in the schedule."""
         mutation_point = random.randint(0, len(schedule) - 1)
         new_program = random.choice(all_programs)
         schedule[mutation_point] = new_program
@@ -63,17 +78,20 @@ if uploaded_file is not None:
 
     def genetic_algorithm(initial_schedule, generations=GEN, population_size=POP,
                           crossover_rate=0.8, mutation_rate=0.02, elitism_size=EL_S):
-        """Main GA loop."""
-        population = [random_schedule() for _ in range(population_size)]
+        """Main GA loop with initial best schedule as seed."""
+        population = [initial_schedule]
+        for _ in range(population_size - 1):
+            new_sch = initial_schedule.copy()
+            random.shuffle(new_sch)
+            population.append(new_sch)
 
         for generation in range(generations):
-            # Sort by fitness
+            new_population = []
             population.sort(key=lambda s: fitness_function(s), reverse=True)
-            new_population = population[:elitism_size]
+            new_population.extend(population[:elitism_size])
 
-            # Generate new offspring
             while len(new_population) < population_size:
-                parent1, parent2 = random.choices(population[:10], k=2)
+                parent1, parent2 = random.choices(population, k=2)
                 if random.random() < crossover_rate:
                     child1, child2 = crossover(parent1, parent2)
                 else:
@@ -86,7 +104,7 @@ if uploaded_file is not None:
 
                 new_population.extend([child1, child2])
 
-            population = new_population[:population_size]
+            population = new_population
 
         best_final = max(population, key=lambda s: fitness_function(s))
         return best_final
@@ -95,7 +113,7 @@ if uploaded_file is not None:
     st.sidebar.header("⚙️ Choose Trial to Run")
     trial = st.sidebar.radio("Select a trial", ["Trial 1", "Trial 2", "Trial 3"])
 
-    # Each trial gets its own slider and button
+    # Trial-specific sliders
     if trial == "Trial 1":
         co_r = st.sidebar.slider("Trial 1 - Crossover Rate", 0.0, 1.0, 0.8, 0.01)
         mut_r = st.sidebar.slider("Trial 1 - Mutation Rate", 0.0, 0.1, 0.02, 0.01)
@@ -114,22 +132,26 @@ if uploaded_file is not None:
         st.subheader(f"🎯 {trial} Results — Crossover: {co_r:.2f} | Mutation: {mut_r:.2f}")
         progress = st.progress(0)
 
-        initial_schedule = random_schedule()
-        best_schedule = genetic_algorithm(
-            initial_schedule,
-            generations=GEN,
-            population_size=POP,
-            crossover_rate=co_r,
-            mutation_rate=mut_r,
-            elitism_size=EL_S
-        )
+        # Brute-force best (small data only)
+        st.write("🧠 Running Brute Force Initial Search...")
+        all_possible_schedules = initialize_pop(all_programs)
+        initial_best_schedule = finding_best_schedule(all_possible_schedules)
 
-        total_rating = fitness_function(best_schedule)
+        # Then GA refinement
+        st.write("⚙️ Running Genetic Algorithm Optimization...")
+        genetic_schedule = genetic_algorithm(initial_best_schedule,
+                                             generations=GEN,
+                                             population_size=POP,
+                                             crossover_rate=co_r,
+                                             mutation_rate=mut_r,
+                                             elitism_size=EL_S)
 
-        # --- Display Results ---
+        final_schedule = genetic_schedule[:len(all_time_slots)]
+        total_rating = fitness_function(final_schedule)
+
         df = pd.DataFrame({
             "Time Slot": [f"{t:02d}:00" for t in all_time_slots],
-            "Program": best_schedule
+            "Program": final_schedule
         })
 
         st.dataframe(df, use_container_width=True)
